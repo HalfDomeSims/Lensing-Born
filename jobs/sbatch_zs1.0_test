@@ -1,0 +1,29 @@
+#! /bin/bash
+#SBATCH --nodes=8
+#SBATCH --tasks-per-node=32
+#SBATCH --cpus-per-task=1
+#SBATCH -C haswell
+#SBATCH -t 0:30:00
+#SBATCH -J run-wlen-zs1.0
+#SBATCH -o zs.1.0_2048-5000.o%j
+#SBATCH -e zs.1.0_2048-5000.e%j
+#SBATCH --qos=debug  #regular
+#SBATCH -A mp107
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jia.liu@ipmu.jp
+
+export OMP_PROC_BIND=true
+export OMP_PLACES=threads
+export OMP_NUM_THREADS=2
+
+source /global/common/software/m3035/conda-activate.sh 3.7
+bcast-pip mpl_aea
+bcast-pip mpsort
+
+SRC=/global/cfs/cdirs/m3035/yici/rfof_proc4096_nc2048_size5000_nsteps60lin_ldr0_rcvtrue_fstnone_pnf2_lnf2_s100_pgdtrue_dhf1.0000_tiled0.20_fll_elllim_10000_npix_4096/usmesh/
+DST=/global/u1/j/jialiu/halfdome/lensing/lensing_maps
+BIN=/global/u1/j/jialiu/CorrelatedSims/wlen.py
+
+zs='1.00 2.00 3.00'
+srun python -u $BIN $DST $SRC $zs --zlmin 0.0 --zlmax 4.0 --zstep=0.2 --nside=512
+
