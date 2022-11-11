@@ -1,0 +1,46 @@
+#! /bin/bash
+#SBATCH --nodes=32
+#SBATCH --tasks-per-node=64
+#SBATCH -C knl
+#SBATCH -t 2:30:00
+#SBATCH -J run-wlen-4096
+#SBATCH -o HDlensing4k.o%j
+#SBATCH -e HDlensing4k.e%j
+#SBATCH --qos=regular #debug  #regular
+#SBATCH -A mp107
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jia.liu@ipmu.jp
+
+export OMP_PROC_BIND=true
+export OMP_PLACES=threads
+export OMP_NUM_THREADS=2
+
+source /global/common/software/m3035/conda-activate.sh 3.7
+bcast-pip mpl_aea
+bcast-pip mpsort
+
+SRC512=/global/cfs/cdirs/m3035/yici/rfof_proc64_nc512_size5000_nsteps60lin_ldr0_rcvtrue_fstnone_pnf2_lnf2_s100_pgdtrue_dhf1.0000_tiled0.20_fll_elllim_10000_npix_4096/usmesh
+SRC1024=/global/cfs/cdirs/m3035/yici/rfof_proc512_nc1024_size5000_nsteps60lin_ldr0_rcvtrue_fstnone_pnf2_lnf2_s100_pgdtrue_dhf1.0000_tiled0.20_fll_elllim_10000_npix_4096/usmesh
+SRC2048=/global/cfs/cdirs/m3035/yici/rfof_proc4096_nc2048_size5000_nsteps60lin_ldr0_rcvtrue_fstnone_pnf2_lnf2_s100_pgdtrue_dhf1.0000_tiled0.20_fll_elllim_10000_npix_4096/usmesh
+SRC4096=/global/cfs/cdirs/m3035/yici/rfof_proc32768_nc4096_size5000_nsteps60lin_ldr0_rcvtrue_fstnone_pnf2_lnf2_s100_pgdtrue_dhf1.0000_tiled0.20_fll_elllim_10000_npix_4096/usmesh
+SRC8192=/global/cfs/cdirs/m3035/yici/rfof_proc262144_nc8192_size5000_nsteps60lin_ldr0_rcvtrue_fstnone_pnf2_lnf2_s100_pgdtrue_dhf1.0000_tiled0.20_fll_elllim_10000_npix_4096/usmesh
+
+
+DST512=/global/u1/j/jialiu/halfdome/Lensing-Born/lensing_maps/nc512
+DST1024=/global/u1/j/jialiu/halfdome/Lensing-Born/lensing_maps/nc1024
+DST2048=/global/u1/j/jialiu/halfdome/Lensing-Born/lensing_maps/nc2048
+DST4096=/global/u1/j/jialiu/halfdome/Lensing-Born/lensing_maps/nc4096
+DST8192=/global/u1/j/jialiu/halfdome/Lensing-Born/lensing_maps/nc8192
+
+##### edit this block for different resolution
+SRC=$SRC4096
+DST=$DST4096
+##############################################
+
+BIN=/global/u1/j/jialiu/halfdome/Lensing-Born/wlen.py
+
+mkdir -p $DST
+
+zs='1.00 2.00 3.00 1100.0'
+srun python -u $BIN $DST $SRC $zs --zlmin 0.0 --zlmax 4.0 --zstep=0.2 --nside=4096
+
